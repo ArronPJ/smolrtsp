@@ -112,12 +112,24 @@ int smolrtsp_dgram_socket(int af, const void *restrict addr, uint16_t port) {
     }
 
     const int enable_pmtud = 1;
+    #if defined(__APPLE__)
+    socklen_t               ttl = 1;
     if (setsockopt(
-            fd, IPPROTO_IP, IP_PMTUDISC_WANT, &enable_pmtud,
-            sizeof enable_pmtud) == -1) {
+        fd, IPPROTO_IP, IP_TTL, &ttl,
+        sizeof ttl) == -1) {
+        perror("setsockopt IP_TTL");
+        goto fail;
+    }
+    #elif defined(__linux)
+    if (setsockopt(
+        fd, IPPROTO_IP, IP_PMTUDISC_WANT, &enable_pmtud,
+        sizeof enable_pmtud) == -1) {
         perror("setsockopt IP_PMTUDISC_WANT");
         goto fail;
     }
+    #endif
+    //IP_PMTUDISC_DONT
+    //org IP_PMTUDISC_WANT
 
     return fd;
 
