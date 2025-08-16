@@ -33,6 +33,8 @@ xbdebuglib:
 .PHONY: xcode_app
 xcode_app:
 	cmake -S examples -B IDE_EX -G Xcode -DCMAKE_OSX_SYSROOT=macosx15.5
+# Clean by "xcodebuild clean -project IDE_EX/examples.xcodeproj -scheme server -configuration Debug"
+
 
 ### ### Generate Xcode Project (App)-x86_64
 # DONT' use (Build-Run-Fail)
