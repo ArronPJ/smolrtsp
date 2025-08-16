@@ -54,6 +54,8 @@ dkms.conf
 # CMake build files
 build/
 build_cmake/
+IDE/
+IDE_EX/
 
 # Doxygen
 docs/
