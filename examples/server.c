@@ -102,7 +102,7 @@ typedef struct {
     struct bufferevent *bev;
     int *streams_playing;
 } AudioCtx;
-
+//Sends media over RTP
 static SmolRTSP_Droppable play_audio(
     struct event_base *base, struct bufferevent *bev, SmolRTSP_RtpTransport *t,
     struct event **ev, int *streams_playing);
@@ -118,27 +118,30 @@ typedef struct {
     struct bufferevent *bev;
     int *streams_playing;
 } VideoCtx;
-
+//Sends media over RTP
 static SmolRTSP_Droppable play_video(
     struct event_base *base, struct bufferevent *bev, SmolRTSP_RtpTransport *t,
     struct event **ev, int *streams_playing);
 static void send_video_packet_cb(evutil_socket_t fd, short events, void *arg);
 static bool send_nalu(VideoCtx *ctx);
 
+// Sets up listener and event loop
+//
 int main(void) {
-    srand(time(NULL));
-
+    srand(time(NULL));  //Seeds the random number generator — used later for generating session IDs.
+    //Initializes the libevent core event loop. If it fails, the program exits.
     struct event_base *base;
     if ((base = event_base_new()) == NULL) {
         fputs("event_base_new failed.\n", stderr);
         return EXIT_FAILURE;
     }
-
+    //Prepares a socket address (binds to all interfaces, default RTSP port 554).
     struct sockaddr_in sin = {
         .sin_family = AF_INET,
         .sin_port = htons(SERVER_PORT),
     };
-
+    //Binds a TCP listener using libevent and sets the callback to listener_cb() when a client connects.
+    //LEV_OPT_REUSEABLE allows socket reuse; LEV_OPT_CLOSE_ON_FREE ensures the fd is cleaned up.
     struct evconnlistener *listener;
     if ((listener = evconnlistener_new_bind(
              base, listener_cb, (void *)base,
@@ -147,7 +150,7 @@ int main(void) {
         fputs("evconnlistener_new_bind failed.\n", stderr);
         return EXIT_FAILURE;
     }
-
+    //Sets up a signal handler (for Ctrl+C) so the server can cleanly shut down using on_sigint_cb().
     struct event *sigint_handler;
     if ((sigint_handler =
              evsignal_new(base, SIGINT, on_sigint_cb, (void *)base)) == NULL) {
@@ -162,11 +165,11 @@ int main(void) {
 
     printf("Server started on port %d.\n", SERVER_PORT);
 
-    event_base_dispatch(base);
+    event_base_dispatch(base);      //ev1: Starts the event loop — server is now running.
 
-    evconnlistener_free(listener);
-    event_free(sigint_handler);
-    event_base_free(base);
+    evconnlistener_free(listener);  //ev2:
+    event_free(sigint_handler);     //ev3:
+    event_base_free(base);          //ev4:
 
     puts("Done.");
     return EXIT_SUCCESS;
